@@ -1,23 +1,31 @@
 var imageExtensions = "jpg|jpeg|gif|png|svg";
 
-console.log("Addon is working correctly, page is " + window.location.href);
+console.log("On-hover image is working correctly. Page is: " + window.location.href);
 
+/**
+ * Called when the script is fully loaded, initializing all anchors to images
+ * with the hover script.
+ */
 function init()
 {
 	var allAnchors = document.getElementsByTagName("a");
 
 	for(var i = 0; i < allAnchors.length; i++)
 	{
-		var anchorWithImage = allAnchors[i];
+		var anchor = allAnchors[i];
 
+		// Finds all anchors that link to images
 		var matcher = new RegExp(".*\\.(" + imageExtensions + ")$");
-		if(matcher.test(anchorWithImage.href))
+		if(matcher.test(anchor.href))
 		{
-			anchorWithImage.addEventListener("mouseover", mouseOver);
+			anchor.addEventListener("mouseover", mouseOver);
 		}
 	}
 }
 
+/**
+ * Called when the mouse hovers over an image link.
+ */
 function mouseOver(event)
 {
 	alert(event.target.href);
