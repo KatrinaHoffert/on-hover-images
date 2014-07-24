@@ -1,9 +1,10 @@
 {
-  "name": "addon",
-  "title": "addon",
-  "id": "jid1-h26mjJChoQAgKQ",
-  "description": "a basic add-on",
-  "author": "",
-  "license": "MPL 2.0",
+  "name": "on-hover-images",
+  "title": "On-hover images",
+  "id": "on-hover-images@mike-hoffert.com",
+  "icon": "data/icon-64.png",
+  "description": "An add-on for viewing images by hovering over their links.",
+  "author": "Mike Hoffert (http://mike-hoffert.com)",
+  "license": "MIT license",
   "version": "0.1"
 }
