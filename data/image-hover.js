@@ -1,0 +1,1 @@
+console.log("Addon is working correctly, page is " + window.location.href);
