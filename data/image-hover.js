@@ -22,11 +22,36 @@ var DEBUG = true;
 if(DEBUG) console.log("On-hover image is working correctly. Page is: " + window.location.href);
 
 /**
+ * The URL of the currently active hover. Used so that we can enforce only one hover being shown at
+ * a time, but not remove hovers if we move over the same link (or a different part of the same
+ * anchor).
+ */
+var hoverUrl;
+
+/**
+ * Main div that is displayed when hovering over image link (and destroyed when we remove the
+ * mouse).
+ */
+var hoverDiv;
+
+/**
+ * Stores x-coord of mouse at time of hover. Used so we can determine when the mouse moves away
+ * (since the link may be underneith the hover).
+ */
+var hoverX;
+
+/**
+ * Corresponding y-coord for `hoverX`.
+ */
+var hoverY;
+
+/**
  * Called when the script is fully loaded, initializing all anchors to images with the hover script.
  */
 function init()
 {
 	var allAnchors = document.getElementsByTagName("a");
+	var foundImage = false;
 
 	for(var i = 0; i < allAnchors.length; i++)
 	{
@@ -36,20 +61,46 @@ function init()
 		var matcher = new RegExp(".*\\.(" + imageExtensions + ")$");
 		if(matcher.test(anchor.href, "i"))
 		{
+			foundImage = true;
 			anchor.addEventListener("mouseover", mouseOver);
 		}
 	}
+
+	if(foundImage) document.body.addEventListener("mousemove", mouseOut);
 }
 
 /**
  * Called when the mouse hovers over an image link.
- * @param event The event that triggered this function. Contains a reference to the element that
- * we're hovering over.
+ * @param event The MouseEvent that triggered this function.
  */
 function mouseOver(event)
 {
 	var url = event.target.href;
+	if(DEBUG) console.log("Hovered over: " + url);
+
+	hoverX = event.clientX;
+	hoverY = event.clientY;
 	isValidImageUrl(url, constructHover);
+}
+
+/**
+ * Called when the mouse moves. Used to check whether or not we've moved from the "hover location",
+ * which is the coordinates where we hovered. A grace area is used to prevent minor mouse movements
+ * from removing the hover by accident.
+ * @param event The MouseEvent that triggered this function.
+ */
+function mouseOut(event)
+{
+	var xCoordInRange = Math.abs(event.clientX - hoverX) < 20;
+	var yCoordInRange = Math.abs(event.clientY - hoverY) < 20;
+
+	if(hoverUrl !== undefined && xCoordInRange && yCoordInRange)
+	{
+		if(DEBUG) console.log("Removed hover from: " + hoverUrl);
+		document.body.removeChild(hoverDiv);
+		hoverUrl = undefined;
+		hoverDiv = null;
+	}
 }
 
 /**
@@ -65,8 +116,8 @@ function mouseOver(event)
 function isValidImageUrl(url, callback)
 {
 	var img = new Image();
-	img.onerror = function() { callback(url, false); }
-	img.onload =  function() { callback(url, true); }
+	img.onerror = function() { callback(url, false, -1, -1); }
+	img.onload =  function() { callback(url, true, img.width, img.height); }
 	img.src = url
 }
 
@@ -74,19 +125,23 @@ function isValidImageUrl(url, callback)
  * Constructs the hover that will display the image (if it's valid).
  * @param url The URL that was checked.
  * @param valid True if the image is valid and false otherwise.
+ * @param width The width of the image in pixels.
+ * @param height The height of the image in pixels.
  */
-function constructHover(url, valid)
+function constructHover(url, valid, width, height)
 {
 	if(DEBUG) console.log((valid ? "VALID" : "INVALID") + " image URL: " + url);
+	if(DEBUG) console.log("Image width " + width + "; height: " + height);
 	if(!valid) return;
 
-	var div = document.createElement("div");
-	div.style.position = "fixed";
-	div.style.top = "10px";
-	div.style.left = "10px";
-	div.innerHTML = "<img src='" + url + "' />";
+	hoverDiv = document.createElement("div");
+	hoverDiv.style.position = "fixed";
+	hoverDiv.style.top = "10px";
+	hoverDiv.style.left = "10px";
+	hoverDiv.innerHTML = "<img src='" + url + "' />";
 
-	document.body.appendChild(div);
+	hoverUrl = url;
+	document.body.appendChild(hoverDiv);
 }
 
 init();
