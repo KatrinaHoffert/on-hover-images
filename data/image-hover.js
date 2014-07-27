@@ -76,10 +76,13 @@ function init()
 function mouseOver(event)
 {
 	var url = event.target.href;
-	if(DEBUG) console.log("Hovered over: " + url);
-
 	hoverX = event.clientX;
 	hoverY = event.clientY;
+
+	if(DEBUG) console.log("Mouse hovered. x = " + hoverX + " y = " + hoverY);
+
+	if(DEBUG) console.log("Hovered over: " + url);
+	if(DEBUG) console.log("Hovered over: " + url);
 	isValidImageUrl(url, constructHover);
 }
 
@@ -91,10 +94,12 @@ function mouseOver(event)
  */
 function mouseOut(event)
 {
-	var xCoordInRange = Math.abs(event.clientX - hoverX) < 20;
-	var yCoordInRange = Math.abs(event.clientY - hoverY) < 20;
+	if(DEBUG) console.log("Mouse moved. x = " + event.clientX + " y = " + event.clientY);
 
-	if(hoverUrl !== undefined && xCoordInRange && yCoordInRange)
+	var xCoordOutsideGraceArea = Math.abs(event.clientX - hoverX) > 20;
+	var yCoordOutsideGraceArea = Math.abs(event.clientY - hoverY) > 20;
+
+	if(hoverUrl && xCoordOutsideGraceArea && yCoordOutsideGraceArea)
 	{
 		if(DEBUG) console.log("Removed hover from: " + hoverUrl);
 		document.body.removeChild(hoverDiv);
@@ -138,6 +143,7 @@ function constructHover(url, valid, width, height)
 	hoverDiv.style.position = "fixed";
 	hoverDiv.style.top = "10px";
 	hoverDiv.style.left = "10px";
+	hoverDiv.style.zIndex = "10000"; // Should hover above most page elements
 	hoverDiv.innerHTML = "<img src='" + url + "' />";
 
 	hoverUrl = url;
