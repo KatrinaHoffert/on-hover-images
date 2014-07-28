@@ -170,7 +170,7 @@ function constructHover(url, valid, width, height)
 	if(tooWide && tooTall)
 	{
 		// Figure out if we need to scale on the width or the height
-		if(aspectRatio > screenAspectRatio)
+		if((width / innerWidth) > (height / innerHeight))
 		{
 			adaptedWidth = (1.0 - padding) * innerWidth;
 			adaptedHeight = adaptedWidth / aspectRatio;
@@ -178,7 +178,7 @@ function constructHover(url, valid, width, height)
 		else
 		{
 			adaptedHeight = (1.0 - padding) * innerHeight;
-			adaptedWidth = adaptedHeight / aspectRatio;
+			adaptedWidth = adaptedHeight * aspectRatio;
 		}
 	}
 	else if(tooWide)
@@ -189,7 +189,7 @@ function constructHover(url, valid, width, height)
 	else if(tooTall)
 	{
 		adaptedHeight = (1.0 - padding) * innerHeight;
-		adaptedWidth = adaptedHeight / aspectRatio;
+		adaptedWidth = adaptedHeight * aspectRatio;
 	}
 	else
 	{
