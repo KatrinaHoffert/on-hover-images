@@ -10,6 +10,12 @@
 var imageExtensions = "jpg|jpeg|gif|png|svg";
 
 /**
+ * Percentage of padding to use for large images. We don't want to flood the entire screen with an
+ * image, so we shrink it to fit within the screen and the padding.
+ */
+var padding = 0.10;
+
+/**
  * If true, additional output is created in the console.
  */
 var DEBUG = true;
@@ -79,9 +85,6 @@ function mouseOver(event)
 	hoverX = event.clientX;
 	hoverY = event.clientY;
 
-	if(DEBUG) console.log("Mouse hovered. x = " + hoverX + " y = " + hoverY);
-
-	if(DEBUG) console.log("Hovered over: " + url);
 	if(DEBUG) console.log("Hovered over: " + url);
 	isValidImageUrl(url, constructHover);
 }
@@ -94,8 +97,6 @@ function mouseOver(event)
  */
 function mouseOut(event)
 {
-	if(DEBUG) console.log("Mouse moved. x = " + event.clientX + " y = " + event.clientY);
-
 	var xCoordOutsideGraceArea = Math.abs(event.clientX - hoverX) > 20;
 	var yCoordOutsideGraceArea = Math.abs(event.clientY - hoverY) > 20;
 
@@ -135,16 +136,78 @@ function isValidImageUrl(url, callback)
  */
 function constructHover(url, valid, width, height)
 {
+	// If the div already exists, remove it
+	if(hoverUrl)
+	{
+		if(DEBUG) console.log("Removed hover from: " + hoverUrl);
+		document.body.removeChild(hoverDiv);
+		hoverUrl = undefined;
+		hoverDiv = null;
+	}
+
 	if(DEBUG) console.log((valid ? "VALID" : "INVALID") + " image URL: " + url);
 	if(DEBUG) console.log("Image width " + width + "; height: " + height);
 	if(!valid) return;
 
+	// Create the hover div. It's fixed (so it has the correct scroll position) and has a large
+	// z-index so that it's above everything else. In fact, this should be the maximum z-index.
+	// It's not clear, however, how it'll react to something with the same z-index.
 	hoverDiv = document.createElement("div");
 	hoverDiv.style.position = "fixed";
-	hoverDiv.style.top = "10px";
-	hoverDiv.style.left = "10px";
-	hoverDiv.style.zIndex = "10000"; // Should hover above most page elements
-	hoverDiv.innerHTML = "<img src='" + url + "' />";
+	hoverDiv.style.zIndex = "2147483647";
+
+	// Figure out how to size and position this
+	var innerWidth = window.innerWidth;
+	var innerHeight = window.innerHeight;
+	var tooWide = width * (1.0 - padding) > innerWidth;
+	var tooTall = height * (1.0 - padding) > innerHeight;
+	var aspectRatio = width / height;
+	var screenAspectRatio = innerWidth / innerHeight;
+
+	var adaptedWidth;
+	var adaptedHeight;
+
+	if(tooWide && tooTall)
+	{
+		// Figure out if we need to scale on the width or the height
+		if(aspectRatio > screenAspectRatio)
+		{
+			adaptedWidth = (1.0 - padding) * innerWidth;
+			adaptedHeight = adaptedWidth / aspectRatio;
+		}
+		else
+		{
+			adaptedHeight = (1.0 - padding) * innerHeight;
+			adaptedWidth = adaptedHeight / aspectRatio;
+		}
+	}
+	else if(tooWide)
+	{
+		adaptedWidth = (1.0 - padding) * innerWidth;
+		adaptedHeight = adaptedWidth / aspectRatio;
+	}
+	else if(tooTall)
+	{
+		adaptedHeight = (1.0 - padding) * innerHeight;
+		adaptedWidth = adaptedHeight / aspectRatio;
+	}
+	else
+	{
+		adaptedWidth = width;
+		adaptedHeight = height;
+	}
+
+	// Centre the image in the screen
+	var top = (innerHeight - adaptedHeight) / 2;
+	var left = (innerWidth - adaptedWidth) / 2;
+
+	hoverDiv.style.top = top + "px";
+	hoverDiv.style.left = left + "px";
+	hoverDiv.style.minWidth = "50px";
+	hoverDiv.style.minHeight = "50px";
+	hoverDiv.style.backgroundColor = "white";
+	hoverDiv.innerHTML = "<img width='" + adaptedWidth + "' height='" + adaptedHeight +
+			"' src='" + url + "' />";
 
 	hoverUrl = url;
 	document.body.appendChild(hoverDiv);
